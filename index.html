@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIMAR - Control de Ventas Profesional</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link id="theme-link" rel="stylesheet" type="text/css" href="dark.css">
+</head>
+<body>
+    <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+    <div class="vimar-top-line">
+        <button id="menuBtn" class="menu-btn" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+        <div class="vimar-logo-box"></div>
+        <span class="brand-name">VIMAR</span>
+        <div id="vimar-reloj" class="vimar-reloj">
+            <span id="reloj-fecha" class="reloj-fecha"></span>
+            <span id="reloj-hora" class="reloj-hora"></span>
+        </div>
+        <div class="theme-switch-wrapper">
+            <i class="fas fa-moon" style="color: #888; font-size: 0.8em;"></i>
+            <label class="theme-switch" for="checkbox-theme">
+                <input type="checkbox" id="checkbox-theme" onchange="alternarTema()" />
+                <div class="slider round"></div>
+            </label>
+            <i class="fas fa-sun" style="color: #ffcc00; font-size: 0.8em;"></i>
+        </div>
+    </div>
+    <div id="sidebar" class="sidebar">
+        <!-- Zona scrollable: nav + espacio flexible -->
+        <div class="sidebar-scroll-area">
+            <nav>
+                <button class="sidebar-nav-btn" onclick="verInicio()">🏠 Inicio</button>
+                <button class="sidebar-nav-btn" onclick="verHistorial()">📋 Historial de Ventas</button>
+                <button class="sidebar-nav-btn" onclick="verHistorialIngresosManuales()">📋 Historial Ingresos Manuales</button>
+                <button class="sidebar-nav-btn" onclick="verHistorialGastos()">📋 Historial de Gastos</button>
+                <button class="sidebar-nav-btn" onclick="verStocks()">📦 Ver Inventario</button>
+                <button class="sidebar-nav-btn" onclick="verHistorialInventario()">📖 Historial de Inventario</button>
+            </nav>
+        </div>
+        <!-- Zona fija inferior: contacto + línea + botones -->
+        <div class="sidebar-footer">
+            <div class="sidebar-contacto">
+                <div class="sidebar-contacto-nombre">VIMAR</div>
+                <div>Marquesina #4172</div>
+                <div>Entre AV. Baluarte y Campanario</div>
+                <div>Frac. Res. El Campanario</div>
+                <div>Veracruz, Ver. &nbsp;·&nbsp; CP: 91808</div>
+                <div style="margin-top: 3px;">📞 229 319 1788 &nbsp;·&nbsp; 229 172 5617</div>
+                <div>✉️ limpiezavimar@gmail.com</div>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+                <button onclick="exportarBackup()" class="btn-exportar-backup" onmouseover="this.style.background='#ffA500'; this.style.color='#000';" onmouseout="this.style.background='rgba(255, 165, 0, 0.1)'; this.style.color='#ffA500';">
+                    <i class="fas fa-download"></i> Exportar Backup (JSON)
+                </button>
+                <button onclick="document.getElementById('importFile').click()" class="btn-importar-backup" onmouseover="this.style.background='#ffff00'; this.style.color='#000';" onmouseout="this.style.background='rgba(255, 255, 0, 0.1)'; this.style.color='#ffff00';">
+                    <i class="fas fa-upload"></i> Importar Backup (JSON)
+                </button>
+                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importarBackup(event)">
+                <button onclick="limpiarTodoElHistorial()" class="btn-reiniciar-sistema" onmouseover="this.style.background='#ff4444'; this.style.color='#000';" onmouseout="this.style.background='rgba(255,0,0,0.1)'; this.style.color='#ff4444';"><i class="fas fa-power-off"></i> REINICIAR SISTEMA
+                </button>
+            </div>
+        </div>
+    </div>
+                
+    <div class="main-container">
+        <div id="seccionPrincipal" class="vimar-seccion-principal-activa">
+            <div class="shortcuts-bar">
+                <span><b>ESC</b> Limpiar</span>
+                <span><b>F2</b> Buscador</span>
+                <span><b>F7</b> Guardar Venta</span>
+                <span><b>F8</b> Cerrar Día</span>
+                <span><b>F9</b> Guardar Sem.</span>
+                <span><b>F10</b> Excel completo</span>
+                <span><b>↑ ↓ ← →</b> Navegar</span>
+                <span><b>Enter</b> Agregar</span>
+            </div>
+            <div class="panel-catalog">
+                <input type="text" id="inputBusqueda" class="search-box" placeholder="🔍 Buscar producto o categoría VIMAR..." oninput="filtrarCatalogo()">
+                <div id="catalogo"></div>
+            </div>
+            <div class="panel-right">
+                <div class="ticket-container">
+                    <div class="ticket-header"><h2>VIMAR</h2><small>REGISTRO DE VENTA</small></div>
+                    <div class="ticket-scroll-area">
+                        <table>
+                            <thead><tr><th align="left">PRODUCTO</th><th>CANT.</th><th>P. UNIT.</th><th>TOTAL</th><th></th></tr></thead>
+                            <tbody id="cuerpoVenta"></tbody>
+                        </table>
+                    </div>
+                    <div class="subtotal-area">
+                        <span style="font-weight: 800; color: #888; font-size: 0.9em;">TICKET TOTAL:</span>
+                        <span id="txtSubtotalVivo" style="font-size: 1.8em; font-weight: 900; color: var(--neon-green);">$0.00</span>
+                    </div>
+                </div>
+                <div class="btn-group-guardar-venta">
+                    <button class="btn btn-guardar-venta" onclick="guardarVentaTicket()">💾 Guardar Venta (F7)</button>
+                </div>
+                <div id="listaVentasTicket" class="lista-ventas-ticket"></div>
+                <div class="btn-group">
+                    <button class="btn btn-dia" onclick="terminarDia()">✅ Cerrar Día (F8)</button>
+                    <button class="btn btn-semana" onclick="guardarSemana()">✅ Guardar Semana (F9)</button>
+                </div>
+                <div class="contenedor-monto-caja">
+                    <label style="font-size:0.95em; font-weight:bold;">💰 MONTO EN CAJA:</label>
+                    <input type="number" id="inputCajaReal" placeholder="0" oninput="guardarCaja(); calcularTodo();" class="ticket-input" style="width: 130px; border-color:var(--neon-blue);">
+                </div>
+                <div class="ingreso-card">
+                    <label>➕ REGISTRAR DINERO MANUAL</label>
+                    <div class="gasto-inputs-container">
+                        <input type="text" id="ingresoManualNombre" placeholder="Motivo / Concepto..." class="gasto-input-field" style="width: 50%;">
+                        <input type="number" id="ingresoManualMonto" placeholder="$0" class="gasto-input-field" style="width: 35%;">
+                        <button onclick="agregarIngresoManual()" class="ingreso-btn-add" style="width: 15%;">+</button>
+                    </div>
+                    <div id="listaIngresosManualesUI"></div>
+                    <div>
+                        <button id="btnGuardarIngresosManualesSemana" class="btn btn-guardar-gasto" onclick="guardarIngresosManualesSemana()">✅ Guardar Ingresos de la Semana</button>
+                    </div>
+                </div>
+                <div class="gasto-card">
+                    <label>➖ REGISTRAR GASTO</label>
+                    <div class="gasto-inputs-container">
+                        <input type="text" id="gastoNombre" placeholder="Motivo..." class="gasto-input-field" style="width: 50%;">
+                        <input type="number" id="gastoMonto" placeholder="$0" class="gasto-input-field" style="width: 35%;">
+                        <button onclick="agregarGasto()" class="gasto-btn-add" style="width: 15%;">+</button>
+                    </div>
+                    <div id="listaGastosUI"></div>
+                    <div>
+                        <button id="btnGuardarGastosSemana" class="btn btn-guardar-gasto" onclick="guardarGastosSemana()">✅ Guardar Gastos de la Semana</button>
+                    </div> 
+                </div>
+                <div class="saldo-neto">
+                    <small style="color: #aaa; font-size: 0.75em; letter-spacing: 1px;">SALDO NETO FINAL</small>
+                    <div id="txtSaldoFinal" style="font-size: 2.2em; font-weight: 900;">$0.00</div>
+                </div>
+                <div class="contenedor-filtros-graficas">
+                    <button onclick="cambiarFiltroGrafica('dia')" class="btn-filtro-vimar" id="btnFiltroDia">
+                        <div class="indicador-filtro"></div>
+                        <span>Último Día</span>
+                    </button>
+                    <button onclick="cambiarFiltroGrafica('semana')" class="btn-filtro-vimar" id="btnFiltroSemana">
+                        <div class="indicador-filtro"></div>
+                        <span>Última Semana</span>
+                    </button>
+                    <button onclick="cambiarFiltroGrafica('general')" class="btn-filtro-vimar activo" id="btnFiltroGeneral">
+                        <div class="indicador-filtro"></div>
+                        <span>General</span>
+                    </button>
+                </div>
+                <div class="graficas-grid">
+                    <div class="chart-box"><canvas id="chartI"></canvas></div>
+                    <div class="chart-box"><canvas id="chartC"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div id="seccionHistorial" class="seccion">
+            <div class="centrar-titulo">
+                <h1 class="titulo">
+                    <i class="fas fa-boxes" style="margin-right: 15px;"></i>HISTORIAL DE VENTAS
+                </h1>
+                <div class="linea-separador"></div>
+                <div class="contenedor-excel-historial-centro">
+                    <button type="button" class="btn btn-excel btn-excel-historial" onclick="generarExcelCompleto()">📥 Reporte Excel completo (F10)</button>
+                </div>
+            </div>
+            <div id="contenedorTablasHistorial" class="vimar-contenedor-historial-semanas"></div>
+        </div>
+        <section id="seccionHistorialIngresosManuales" class="seccion">
+            <div class="centrar-titulo">
+                <h1 class="titulo">
+                    <i></i> HISTORIAL INGRESOS MANUALES
+                </h1>
+                <div class="linea-separador"></div>
+            </div>
+            <div id="contenedorHistorialIngresosManuales" class="vimar-contenedor-historial-semanas">
+            </div>
+        </section>
+        <section id="seccionHistorialGastos" class="seccion">
+            <div class="centrar-titulo">
+                <h1 class="titulo">
+                    <i></i> HISTORIAL DE GASTOS
+                </h1>
+                <div class="linea-separador"></div>
+            </div>
+            <div id="contenedorHistorialGastos" class="vimar-contenedor-historial-semanas">
+            </div>
+        </section>
+        <section id="seccionStocks" class="seccion">
+            <div class="centrar-subtitulo">
+                <div class="centrar-titulo">
+                    <h1 class="titulo">
+                        <i class="fas fa-boxes" style="margin-right: 15px;"></i>CONTROL DE INVENTARIO
+                    </h1>
+                    <div class="linea-separador"></div>
+                </div>
+                <p class="subtitulo">
+                    Monitoreo de productos en tiempo real
+                </p>
+            </div>
+            <div id="btnFiltroTanques" onclick="toggleFiltroTanques()" class="filtro-tanques">
+                <div id="indicadorFiltro" class="indicador-filtro-tanques"></div>
+                <span id="txtFiltro" class="txt-filtro-tanques">Mostrar Todo</span>
+            </div>
+            <div id="contenedorStocks" class="contenedor-stocks"></div>
+        </section>
+        <div id="seccionHistorialInventario" class="seccion">
+            <div class="centrar-titulo">
+                <h1 class="titulo">
+                    <i class="fas fa-boxes" style="margin-right: 15px;"></i>HISTORIAL DE INVENTARIO
+                </h1>
+                <div class="linea-separador"></div>
+            </div>
+            <div class="borde-tabla-casilla">
+                <table class="tabla-casilla-inv">
+                    <thead>
+                        <tr class="contenedor-casilla">
+                            <th class="casilla">Fecha / Hora</th>
+                            <th class="casilla">Producto</th>
+                            <th class="casilla">Movimiento</th>
+                            <th class="casilla">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaEntradasInventario">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="vimar-modal-confirmar" class="vimar-modal-confirmar" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="vimar-modal-confirmar-titulo" aria-describedby="vimar-modal-confirmar-msg">
+        <div class="vimar-modal-confirmar-backdrop" aria-hidden="true"></div>
+        <div class="vimar-modal-confirmar-caja">
+            <div class="vimar-modal-confirmar-glow" aria-hidden="true"></div>
+            <h3 id="vimar-modal-confirmar-titulo" class="vimar-modal-confirmar-titulo">Confirmar</h3>
+            <p id="vimar-modal-confirmar-msg" class="vimar-modal-confirmar-msg"></p>
+            <div class="vimar-modal-confirmar-actions">
+                <button type="button" id="vimar-modal-confirmar-no" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--ghost">Cancelar</button>
+                <button type="button" id="vimar-modal-confirmar-si" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vimar-modal-alerta" class="vimar-modal-alerta" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="vimar-modal-alerta-titulo" aria-describedby="vimar-modal-alerta-msg">
+        <div class="vimar-modal-alerta-backdrop" aria-hidden="true"></div>
+        <div id="vimar-modal-alerta-caja" class="vimar-modal-alerta-caja">
+            <div class="vimar-modal-alerta-glow" aria-hidden="true"></div>
+            <h3 id="vimar-modal-alerta-titulo" class="vimar-modal-alerta-titulo">Aviso</h3>
+            <p id="vimar-modal-alerta-msg" class="vimar-modal-alerta-msg"></p>
+            <div class="vimar-modal-alerta-actions">
+                <button type="button" id="vimar-modal-alerta-ok" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vimar-modal-prompt" class="vimar-modal-prompt" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="vimar-modal-prompt-titulo" aria-describedby="vimar-modal-prompt-msg">
+        <div class="vimar-modal-prompt-backdrop" aria-hidden="true"></div>
+        <div class="vimar-modal-prompt-caja">
+            <div class="vimar-modal-prompt-glow" aria-hidden="true"></div>
+            <h3 id="vimar-modal-prompt-titulo" class="vimar-modal-prompt-titulo">Entrada</h3>
+            <p id="vimar-modal-prompt-msg" class="vimar-modal-prompt-msg"></p>
+            <input type="text" id="vimar-modal-prompt-input" class="vimar-modal-prompt-input" autocomplete="off" />
+            <div class="vimar-modal-prompt-actions">
+                <button type="button" id="vimar-modal-prompt-cancel" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--ghost">Cancelar</button>
+                <button type="button" id="vimar-modal-prompt-ok" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="logica.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>
