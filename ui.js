@@ -227,14 +227,19 @@ function renderizarListaVentasTicket() {
         item.className = "venta-ticket-item item-nuevo";
         item.style.setProperty('--vimar-stagger-delay', `${idxRev * 40}ms`);
  
-        // Cabecera de la venta (hora + botón eliminar)
+        // Cabecera de la venta (hora + botones acción)
         const itemHeader = document.createElement('div');
         itemHeader.className = "venta-ticket-item-header";
         itemHeader.innerHTML = `
             <span class="venta-ticket-hora"><i class="fas fa-clock"></i> Venta ${ventasTicket.length - idxRev} &nbsp;·&nbsp; ${venta.hora}</span>
-            <button class="btn-delete-venta-ticket" onclick="eliminarVentaTicket(${idx})" title="Eliminar venta">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="venta-ticket-header-actions">
+                <button type="button" class="btn-ticket-venta-ticket" onclick="generarTicketVentaTicket(${idx})" title="Generar ticket imprimible">
+                    🖨️
+                </button>
+                <button class="btn-delete-venta-ticket" onclick="eliminarVentaTicket(${idx})" title="Eliminar venta">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         `;
         item.appendChild(itemHeader);
  
