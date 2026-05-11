@@ -1,4 +1,4 @@
-// --- CONFIGURACIÓN Y ESTADO INICIAL ---
+/* --- CONFIGURACIÓN Y ESTADO INICIAL */
 
 const preciosLiquidos = {
     "Persil Verde": {0.5: 10, 1: 16, 2: 30, 3: 40}, "Persil Transparente": {0.5: 10, 1: 16, 2: 30, 3: 40},
