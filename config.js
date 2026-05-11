@@ -25,9 +25,11 @@ const preciosLiquidos = {
     "Shampoo C Fresa": {0.5: 13, 1: 25, 2: 45, 3: 65}, "Shampoo C Coco": {0.5: 13, 1: 25, 2: 45, 3: 65},
     "Shampoo C Durazno": {0.5: 13, 1: 25, 2: 45, 3: 65}, "Sarricida": {0.5: 10, 1: 18, 2: 32, 3: 42},
     "Desengrasante Rosa": {0.5: 10, 1: 18, 2: 32, 3: 42}, "Desengrasante Amarillo": {0.5: 10, 1: 18, 2: 32, 3: 42},
-    "Shampoo Para Mascotas": {0.25: 9, 0.5: 15, 1: 30, 2: 50, 3: 75}, "Creolina": {0.25: 9, 0.5: 15, 1: 30, 2: 50, 3: 75},
+    "Shampoo Para Mascotas": {0.25: 13, 0.5: 20, 1: 40, 2: 80, 3: 120}, "Creolina": {0.25: 9, 0.5: 15, 1: 30, 2: 50, 3: 75},
     "Acido Domestico": {0.25: 9, 0.5: 15, 1: 30, 2: 50, 3: 75}, "Almorol": {0.25: 9, 0.5: 15, 1: 30, 2: 55, 3: 75},
-    "Neutralizador De Aromas": {0.25: 8, 0.5: 13, 1: 25, 2: 45, 3: 65}, "Liquido Azul": {0.25: 8, 0.5: 13, 1: 25, 2: 45, 3: 65}
+    "Neutralizador De Aromas": {0.25: 8, 0.5: 13, 1: 25, 2: 45, 3: 65}, "Liquido Azul": {0.25: 8, 0.5: 13, 1: 25, 2: 45, 3: 65},
+    "A Chica Fresa": { 0.5: 13, 1: 30, 2: 55, 3: 70}, "A Durazno": {0.5: 13, 1: 30, 2: 55, 3: 70},
+    "A Manzana Canela": { 0.5: 13, 1: 30, 2: 55, 3: 70}, "A Channel": {0.5: 13, 1: 30, 2: 55, 3: 70}
 };
 
 const baseArticulos = {
@@ -52,6 +54,7 @@ const categorias = {
 	"Detergentes": {color: "var(--cat-detergente)", prods: ["Persil Verde", "Persil Transparente", "Mas Color", "Ariel", "Zote Blanco", "Zote Rosa", "Zote Con Pinol", "Foca", "Vanish Rosa", "Ace", "Roma", "Vel Rosita", "Desmugrante", "Carisma", "Axion Limon"]},
 	"Suavizantes": {color: "var(--cat-suavizante)", prods: ["S Carisma", "S Paris Hilton", "S Primavera", "S Vainilla/Floral", "S Downy", "S Bebe", "S Frutal", "S Microcapsulas"]},
 	"Limpiador Multiusos": {color: "var(--cat-limpiador)", prods: ["F Manzana Canela", "F Chica Fresa", "F Brisa Marina", "F Channel", "F Chicle", "F Limon", "F Menta", "F Lavanda", "F Naranja", "Pinol Blanco", "Pinol Verde", "Maestro Limpio"]},
+	"Aromatizantes": {color: "var(--cat-aromatizante)", prods: ["A Manzana Canela", "A Chica Fresa", "A Channel", "A Durazno"]},
 	"Cloros": {color: "var(--cat-cloro)", prods: ["Cloro", "Hipoclorito", "Cloro En Gel"]},
 	"Shampoo Manos": {color: "var(--cat-shampoo-m)", prods: ["Shampoo M Durazno", "Shampoo M Naranja", "Shampoo M Manzana Canela", "Shampoo M Frutal"]},
 	"Shampoo Capilar": {color: "var(--cat-shampoo-c)", prods: ["Shampoo C Fresa", "Shampoo C Coco", "Shampoo C Durazno"]},
