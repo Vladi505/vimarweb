@@ -1,6 +1,10 @@
 // --- LÓGICA DE DATOS Y PERSISTENCIA ---
 
 function playSound(tipo) {
+    try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch(e) { return; }
+    try {
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
@@ -73,6 +77,7 @@ function playSound(tipo) {
             oscillator.stop(ahora + 0.05);
             break;
     }
+    } catch(e) { /* audio no disponible */ }
 }
 
 // --- Modales Neon / Glass (confirmar, alerta, prompt) ---
@@ -85,7 +90,10 @@ function vimarActualizarCapaModalBody() {
     const c = document.getElementById('vimar-modal-confirmar')?.classList.contains('vimar-modal-confirmar--visible');
     const a = document.getElementById('vimar-modal-alerta')?.classList.contains('vimar-modal-alerta--visible');
     const p = document.getElementById('vimar-modal-prompt')?.classList.contains('vimar-modal-prompt--visible');
-    document.body.classList.toggle('vimar-modal-abierto', !!(c || a || p));
+    const f = document.getElementById('vimar-modal-formulario')?.classList.contains('vimar-modal-confirmar--visible');
+    const prod = document.getElementById('vimar-modal-producto')?.classList.contains('vimar-modal-confirmar--visible');
+    const info = document.getElementById('vimar-popup-producto-info')?.classList.contains('vimar-modal-confirmar--visible');
+    document.body.classList.toggle('vimar-modal-abierto', !!(c || a || p || f || prod || info));
 }
 
 function vimarModalGlobalKeydown(e) {
@@ -93,6 +101,16 @@ function vimarModalGlobalKeydown(e) {
     if (e.key !== 'Escape') return;
     e.preventDefault();
     e.stopPropagation();
+    const info = document.getElementById('vimar-popup-producto-info');
+    if (info?.classList.contains('vimar-modal-confirmar--visible')) {
+        cerrarInfoProductoAdmin();
+        return;
+    }
+    const fr = document.getElementById('vimar-modal-formulario');
+    if (fr?.classList.contains('vimar-modal-confirmar--visible')) {
+        cerrarModalFormulario(null);
+        return;
+    }
     const pr = document.getElementById('vimar-modal-prompt');
     if (pr?.classList.contains('vimar-modal-prompt--visible')) {
         cerrarModalPromptVimar(null);
@@ -114,7 +132,7 @@ function inicializarModalesVimarTeclado() {
     document.addEventListener('keydown', vimarModalGlobalKeydown, true);
 }
 
-function cerrarModalConfirmarVimar(resultado) {
+function cerrarModalConfirmarVimar(resultado, conSonido = true) {
     if (_vimarModalConfirmarResolver === null) return;
     const resolve = _vimarModalConfirmarResolver;
     _vimarModalConfirmarResolver = null;
@@ -126,6 +144,7 @@ function cerrarModalConfirmarVimar(resultado) {
     const caja = document.querySelector('#vimar-modal-confirmar .vimar-modal-confirmar-caja');
     if (caja) caja.classList.remove('vimar-modal-peligroso');
     vimarActualizarCapaModalBody();
+    if (conSonido && typeof playSound === 'function') playSound('click');
     resolve(resultado);
 }
 
@@ -148,9 +167,9 @@ function mostrarModalConfirmar(mensaje, opciones) {
             return;
         }
         inicializarModalConfirmarVimar();
-        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false);
-        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar();
-        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null);
+        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false, false);
+        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar(false);
+        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null, false);
         _vimarModalConfirmarResolver = resolve;
 
         const titulo = opciones.titulo != null ? opciones.titulo : 'Confirmar';
@@ -177,7 +196,7 @@ function mostrarModalConfirmar(mensaje, opciones) {
     });
 }
 
-function cerrarModalAlertaVimar() {
+function cerrarModalAlertaVimar(conSonido = true) {
     if (_vimarModalAlertaResolver === null) return;
     const resolve = _vimarModalAlertaResolver;
     _vimarModalAlertaResolver = null;
@@ -191,6 +210,7 @@ function cerrarModalAlertaVimar() {
         caja.classList.remove('vimar-modal-alerta--tipo-error', 'vimar-modal-alerta--tipo-success', 'vimar-modal-alerta--tipo-info');
     }
     vimarActualizarCapaModalBody();
+    if (conSonido && typeof playSound === 'function') playSound('click');
     resolve();
 }
 
@@ -212,9 +232,9 @@ function mostrarModalAlerta(mensaje, opciones) {
             return;
         }
         inicializarModalAlertaVimar();
-        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar();
-        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false);
-        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null);
+        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar(false);
+        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false, false);
+        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null, false);
         _vimarModalAlertaResolver = resolve;
 
         const titulo = opciones.titulo != null ? opciones.titulo : 'Aviso';
@@ -239,7 +259,7 @@ function mostrarModalAlerta(mensaje, opciones) {
     });
 }
 
-function cerrarModalPromptVimar(resultado) {
+function cerrarModalPromptVimar(resultado, conSonido = true) {
     if (_vimarModalPromptResolver === null) return;
     const resolve = _vimarModalPromptResolver;
     _vimarModalPromptResolver = null;
@@ -251,6 +271,7 @@ function cerrarModalPromptVimar(resultado) {
     }
     if (input) input.value = '';
     vimarActualizarCapaModalBody();
+    if (conSonido && typeof playSound === 'function') playSound('click');
     resolve(resultado);
 }
 
@@ -283,9 +304,9 @@ function mostrarModalPrompt(mensaje, valorDefecto, opciones) {
             return;
         }
         inicializarModalPromptVimar();
-        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null);
-        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false);
-        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar();
+        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null, false);
+        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false, false);
+        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar(false);
         _vimarModalPromptResolver = resolve;
 
         document.getElementById('vimar-modal-prompt-titulo').textContent = opciones.titulo != null ? opciones.titulo : 'Entrada';
@@ -306,6 +327,99 @@ function mostrarModalPrompt(mensaje, valorDefecto, opciones) {
             input.focus();
             input.select();
         }, 80);
+    });
+}
+
+// --- Modal formulario unificado (edición multi-campo, estilo panel producto) ---
+let _vimarModalFormularioResolver = null;
+let _vimarModalFormularioCampos = [];
+
+function cerrarModalFormulario(resultado, conSonido = true) {
+    const resolve = _vimarModalFormularioResolver;
+    _vimarModalFormularioResolver = null;
+    _vimarModalFormularioCampos = [];
+    const root = document.getElementById('vimar-modal-formulario');
+    if (root) {
+        root.classList.remove('vimar-modal-confirmar--visible');
+        root.setAttribute('aria-hidden', 'true');
+    }
+    const cont = document.getElementById('vimar-modal-formulario-campos');
+    if (cont) cont.innerHTML = '';
+    vimarActualizarCapaModalBody();
+    if (conSonido && resolve && resultado === null && typeof playSound === 'function') playSound('click');
+    if (resolve) resolve(resultado);
+}
+
+function confirmarModalFormulario() {
+    if (typeof playSound === 'function') playSound('click');
+    const valores = {};
+    for (const campo of _vimarModalFormularioCampos) {
+        const el = document.getElementById('vimar-form-' + campo.id);
+        if (el) valores[campo.id] = el.value;
+    }
+    cerrarModalFormulario(valores, false);
+}
+
+function inicializarModalFormularioVimar() {
+    const root = document.getElementById('vimar-modal-formulario');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+    root.querySelector('.vimar-modal-confirmar-backdrop').addEventListener('click', () => cerrarModalFormulario(null));
+    inicializarModalesVimarTeclado();
+}
+
+function mostrarModalFormulario(titulo, campos, opciones) {
+    opciones = opciones || {};
+    return new Promise((resolve) => {
+        const root = document.getElementById('vimar-modal-formulario');
+        if (!root) { resolve(null); return; }
+        inicializarModalFormularioVimar();
+        if (_vimarModalFormularioResolver !== null) cerrarModalFormulario(null, false);
+        if (_vimarModalPromptResolver !== null) cerrarModalPromptVimar(null, false);
+        if (_vimarModalConfirmarResolver !== null) cerrarModalConfirmarVimar(false, false);
+        if (_vimarModalAlertaResolver !== null) cerrarModalAlertaVimar(false);
+        _vimarModalFormularioResolver = resolve;
+        _vimarModalFormularioCampos = campos;
+
+        document.getElementById('vimar-modal-formulario-titulo').textContent = titulo || 'Editar';
+        const cont = document.getElementById('vimar-modal-formulario-campos');
+        cont.innerHTML = '';
+
+        campos.forEach((campo, idx) => {
+            const wrap = document.createElement('div');
+            const lbl = document.createElement('label');
+            lbl.style.cssText = 'font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;display:block;';
+            lbl.textContent = campo.label || campo.id;
+            wrap.appendChild(lbl);
+
+            const input = document.createElement('input');
+            input.id = 'vimar-form-' + campo.id;
+            input.className = 'vimar-modal-prompt-input';
+            input.style.margin = '4px 0 0 0';
+            input.type = campo.type === 'number' ? 'number' : 'text';
+            input.value = campo.value != null ? String(campo.value) : '';
+            input.placeholder = campo.placeholder || '';
+            input.step = campo.step != null ? campo.step : 'any';
+            if (campo.readonly) {
+                input.readOnly = true;
+                input.style.opacity = '0.7';
+                input.style.cursor = 'default';
+            }
+            wrap.appendChild(input);
+            cont.appendChild(wrap);
+
+            if (idx === 0 && !campo.readonly) {
+                setTimeout(() => { input.focus(); input.select(); }, 80);
+            }
+        });
+
+        const btnGuardar = root.querySelector('.vimar-modal-confirmar-btn--primary');
+        if (btnGuardar) btnGuardar.textContent = opciones.btnOk || 'Guardar';
+
+        root.setAttribute('aria-hidden', 'false');
+        root.classList.add('vimar-modal-confirmar--visible');
+        vimarActualizarCapaModalBody();
+        if (typeof playSound === 'function') playSound('click');
     });
 }
 
@@ -806,6 +920,7 @@ async function generarTicketVentaTicket(idx) {
 }
 
 async function eliminarVentaTicket(idx) {
+    if (typeof playSound === 'function') playSound('click');
     const ok = await mostrarModalConfirmar(
         '¿Eliminar esta venta?\n\nSe devolverá el stock de los productos.',
         { titulo: 'Eliminar venta', peligroso: true, btnOk: 'Eliminar' }
@@ -832,18 +947,15 @@ async function editarDatoProductoVentaTicket(idxVenta, idxProd) {
     const prod = venta.Detalles[idxProd];
     const cantAnterior = prod.Cantidad;
 
-    const sCant = await mostrarModalPrompt(`Nueva cantidad para ${prod.Producto}:`, prod.Cantidad, {
-        titulo: 'Editar cantidad',
-        inputType: 'number'
-    });
-    if (sCant == null) return;
-    const sSub = await mostrarModalPrompt(`Nuevo subtotal para ${prod.Producto}:`, prod.Subtotal, {
-        titulo: 'Editar subtotal',
-        inputType: 'number'
-    });
-    if (sSub == null) return;
-    const nuevaCant = parseFloat(sCant);
-    const nuevoSub = parseFloat(sSub);
+    const vals = await mostrarModalFormulario('Editar producto', [
+        { id: 'producto', label: 'Producto', value: prod.Producto, readonly: true },
+        { id: 'cantidad', label: 'Cantidad', value: prod.Cantidad, type: 'number' },
+        { id: 'subtotal', label: 'Subtotal ($)', value: prod.Subtotal, type: 'number' }
+    ]);
+    if (!vals) return;
+
+    const nuevaCant = parseFloat(vals.cantidad);
+    const nuevoSub = parseFloat(vals.subtotal);
 
     if (!isNaN(nuevaCant) && !isNaN(nuevoSub)) {
         actualizarStock(prod.Producto, cantAnterior, 'devolver');
@@ -1077,15 +1189,18 @@ function guardarYRefrescarTodo() {
 }
 
 async function eliminarFilaHistorial(index) {
+    if (typeof playSound === 'function') playSound('click');
     const ok = await mostrarModalConfirmar('¿Eliminar producto?', { titulo: 'Eliminar', peligroso: true, btnOk: 'Eliminar' });
     if (!ok) return;
     detalleVentas.splice(index, 1);
     recalcularResumenDias();
     renderizarTablasHistorial();
     calcularTodo();
+    if (typeof playSound === 'function') playSound('delete');
 }
 
 async function eliminarDiaHistorial(index) {
+    if (typeof playSound === 'function') playSound('click');
     const ok = await mostrarModalConfirmar('¿Eliminar registro?', { titulo: 'Eliminar', peligroso: true, btnOk: 'Eliminar' });
     if (!ok) return;
     const d = resumenDias[index].Día;
@@ -1094,6 +1209,7 @@ async function eliminarDiaHistorial(index) {
     recalcularResumenDias();
     renderizarTablasHistorial();
     calcularTodo();
+    if (typeof playSound === 'function') playSound('delete');
 }
 
 function recalcularResumenDias() {
@@ -1156,12 +1272,15 @@ async function editarDatoProductoPendiente(idxReg, idxProd) {
     const prod = reg.Detalles[idxProd];
     const cantAnterior = prod.Cantidad;
 
-    const sCant = await mostrarModalPrompt(`Nueva cantidad para ${prod.Producto}:`, prod.Cantidad, { titulo: 'Editar cantidad', inputType: 'number' });
-    if (sCant == null) return;
-    const sSub = await mostrarModalPrompt(`Nuevo subtotal para ${prod.Producto}:`, prod.Subtotal, { titulo: 'Editar subtotal', inputType: 'number' });
-    if (sSub == null) return;
-    const nuevaCant = parseFloat(sCant);
-    const nuevoSub = parseFloat(sSub);
+    const vals = await mostrarModalFormulario('Editar producto', [
+        { id: 'producto', label: 'Producto', value: prod.Producto, readonly: true },
+        { id: 'cantidad', label: 'Cantidad', value: prod.Cantidad, type: 'number' },
+        { id: 'subtotal', label: 'Subtotal ($)', value: prod.Subtotal, type: 'number' }
+    ]);
+    if (!vals) return;
+
+    const nuevaCant = parseFloat(vals.cantidad);
+    const nuevoSub = parseFloat(vals.subtotal);
 
     if (!isNaN(nuevaCant) && !isNaN(nuevoSub)) {
         actualizarStock(prod.Producto, cantAnterior, 'devolver');
@@ -1205,15 +1324,17 @@ async function editarDatoProducto(nomSem, idxReg, idxProd) {
     const prod = historialSemanas[nomSem][idxReg].Detalles[idxProd];
     const cantAnterior = prod.Cantidad;
 
-    const sCant = await mostrarModalPrompt(`Nueva cantidad para ${prod.Producto}:`, prod.Cantidad, { titulo: 'Editar cantidad', inputType: 'number' });
-    if (sCant == null) return;
-    const sSub = await mostrarModalPrompt(`Nuevo subtotal para ${prod.Producto}:`, prod.Subtotal, { titulo: 'Editar subtotal', inputType: 'number' });
-    if (sSub == null) return;
-    const nuevaCant = parseFloat(sCant);
-    const nuevoSub = parseFloat(sSub);
+    const vals = await mostrarModalFormulario('Editar producto', [
+        { id: 'producto', label: 'Producto', value: prod.Producto, readonly: true },
+        { id: 'cantidad', label: 'Cantidad', value: prod.Cantidad, type: 'number' },
+        { id: 'subtotal', label: 'Subtotal ($)', value: prod.Subtotal, type: 'number' }
+    ]);
+    if (!vals) return;
+
+    const nuevaCant = parseFloat(vals.cantidad);
+    const nuevoSub = parseFloat(vals.subtotal);
 
     if (!isNaN(nuevaCant) && !isNaN(nuevoSub)) {
-        // Ajuste de stock: Devolvemos lo anterior y descontamos lo nuevo
         actualizarStock(prod.Producto, cantAnterior, 'devolver');
         actualizarStock(prod.Producto, nuevaCant, 'descontar');
 
@@ -1293,12 +1414,12 @@ async function añadirStockManual(nombreProducto) {
 async function editarStockDirecto(nombreProducto) {
     playSound('click');
     const valorActual = stockProductos[nombreProducto] || 0;
-    const s = await mostrarModalPrompt(`Corregir stock de "${nombreProducto}": introduce el valor real actual.`, String(valorActual), {
-        titulo: 'Corregir stock',
-        inputType: 'number'
-    });
-    if (s == null) return;
-    const nuevoValor = parseFloat(s);
+    const vals = await mostrarModalFormulario('Corregir stock', [
+        { id: 'producto', label: 'Producto', value: nombreProducto, readonly: true },
+        { id: 'stock', label: 'Stock actual', value: valorActual, type: 'number' }
+    ]);
+    if (!vals) return;
+    const nuevoValor = parseFloat(vals.stock);
 
     if (!isNaN(nuevoValor) && nuevoValor >= 0) {
         stockProductos[nombreProducto] = nuevoValor;
@@ -1330,15 +1451,14 @@ async function eliminarEntradaStock(index) {
 async function editarEntradaStock(index) {
     playSound('click');
     const reg = historialEntradas[index];
-    const s = await mostrarModalPrompt(`Editar cantidad para "${reg.producto}":`, String(reg.cantidad), {
-        titulo: 'Editar entrada',
-        inputType: 'number'
-    });
-    if (s == null) return;
-    const nuevaCant = parseFloat(s);
+    const vals = await mostrarModalFormulario('Editar entrada de inventario', [
+        { id: 'producto', label: 'Producto', value: reg.producto, readonly: true },
+        { id: 'cantidad', label: 'Cantidad', value: reg.cantidad, type: 'number' }
+    ]);
+    if (!vals) return;
+    const nuevaCant = parseFloat(vals.cantidad);
 
     if (!isNaN(nuevaCant) && nuevaCant >= 0) {
-        // Ajustar el stock real: restamos la vieja entrada y sumamos la nueva
         stockProductos[reg.producto] = (stockProductos[reg.producto] - reg.cantidad) + nuevaCant;
         reg.cantidad = nuevaCant;
         
@@ -1360,6 +1480,7 @@ async function limpiarTodoElHistorial() {
         { titulo: 'Reiniciar sistema', peligroso: true, btnOk: 'Borrar todo' }
     );
     if (!ok) return;
+    if (typeof playSound === 'function') playSound('delete');
     localStorage.clear();
     location.reload();
 }
@@ -1612,10 +1733,14 @@ function inicializarStockSiVacio() {
 
 function exportarBackup() {
     playSound('click');
+    _persistirProductosCustom();
     const data = {
         // Inventario y Configuración
         vimarStock: JSON.parse(localStorage.getItem('vimarStock')) || {},
         vimarCajaMonto: localStorage.getItem('vimarCajaMonto') || "0",
+
+        // Catálogo de productos (precios, categorías, promos)
+        vimarProductosCustom: JSON.parse(localStorage.getItem('vimarProductosCustom')) || null,
 
         // Ventas (Actuales y Archivadas)
         vimarHistorial: JSON.parse(localStorage.getItem('vimarHistorial')) || [], // Ticket actual
@@ -1647,8 +1772,12 @@ function exportarBackup() {
     downloadAnchorNode.remove();
 }
 
+function abrirSelectorImportarBackup() {
+    if (typeof playSound === 'function') playSound('click');
+    document.getElementById('importFile')?.click();
+}
+
 function importarBackup(event) {
-    playSound('click');
     const file = event.target.files[0];
     if (!file) return;
 
@@ -1657,7 +1786,7 @@ function importarBackup(event) {
         try {
             const data = JSON.parse(e.target.result);
 
-            const mensaje = "¿Estás seguro de importar este backup?\n\nEsto borrará todas las ventas, gastos, ingresos manuales e inventario actuales y los reemplazará por los del archivo.";
+            const mensaje = "¿Estás seguro de importar este backup?\n\nEsto borrará todas las ventas, gastos, ingresos manuales, inventario y catálogo de productos actuales y los reemplazará por los del archivo.";
             const ok = await mostrarModalConfirmar(mensaje, {
                 titulo: 'Importar backup',
                 peligroso: true,
@@ -1669,6 +1798,7 @@ function importarBackup(event) {
             const keys = {
                 'vimarStock': data.vimarStock,
                 'vimarCajaMonto': data.vimarCajaMonto,
+                'vimarProductosCustom': data.vimarProductosCustom,
                 'vimarHistorial': data.vimarHistorial,
                 'historialSemanas': data.historialSemanas,
                 'vimarGastos': data.vimarGastos,
@@ -1835,17 +1965,17 @@ async function editarIngresoManualIndividual(nomSem, index) {
     const ingreso = historialIngresosManualesSemanales[nomSem][index];
     if (!ingreso) return;
 
-    const nuevoConcepto = await mostrarModalPrompt('Editar concepto del ingreso manual:', ingreso.nombre, { titulo: 'Editar ingreso manual' });
-    if (nuevoConcepto === null) return;
+    const vals = await mostrarModalFormulario('Editar ingreso manual', [
+        { id: 'concepto', label: 'Concepto / Motivo', value: ingreso.nombre },
+        { id: 'monto', label: 'Monto ($)', value: ingreso.monto, type: 'number' }
+    ]);
+    if (!vals) return;
 
-    const sMonto = await mostrarModalPrompt('Editar monto del ingreso manual:', String(ingreso.monto), { titulo: 'Monto', inputType: 'number' });
-    if (sMonto == null) return;
-
-    const nuevoMonto = parseFloat(sMonto);
+    const nuevoMonto = parseFloat(vals.monto);
     if (isNaN(nuevoMonto) || nuevoMonto <= 0) return;
 
     historialIngresosManualesSemanales[nomSem][index] = {
-        nombre: nuevoConcepto,
+        nombre: vals.concepto.trim(),
         monto: nuevoMonto
     };
 
@@ -1983,28 +2113,71 @@ async function editarGastoIndividual(nomSem, index) {
     playSound('click');
     const gasto = historialGastosSemanales[nomSem][index];
 
-    const nuevoConcepto = await mostrarModalPrompt('Editar concepto del gasto:', gasto.nombre, { titulo: 'Editar gasto' });
-    if (nuevoConcepto === null) return;
+    const vals = await mostrarModalFormulario('Editar gasto', [
+        { id: 'concepto', label: 'Concepto / Motivo', value: gasto.nombre },
+        { id: 'monto', label: 'Monto ($)', value: gasto.monto, type: 'number' }
+    ]);
+    if (!vals) return;
 
-    const sMonto = await mostrarModalPrompt('Editar monto del gasto:', String(gasto.monto), { titulo: 'Monto', inputType: 'number' });
-    if (sMonto == null) return;
-    const nuevoMonto = parseFloat(sMonto);
+    const nuevoMonto = parseFloat(vals.monto);
     if (isNaN(nuevoMonto)) return;
 
-    // Aplicar cambios
     historialGastosSemanales[nomSem][index] = {
-        nombre: nuevoConcepto,
+        nombre: vals.concepto.trim(),
         monto: nuevoMonto
     };
 
     localStorage.setItem('vimarHistorialGastos', JSON.stringify(historialGastosSemanales));
     recalcularTodosSaldosNetoSemanales();
     renderizarHistorialGastos();
-    calcularTodo(); // Para que el saldo neto se actualice con el nuevo monto
+    calcularTodo();
+    playSound('success');
+}
+
+async function editarGastoActual(index) {
+    playSound('click');
+    const gasto = gastosArray[index];
+    if (!gasto) return;
+
+    const vals = await mostrarModalFormulario('Editar gasto', [
+        { id: 'concepto', label: 'Concepto / Motivo', value: gasto.nombre },
+        { id: 'monto', label: 'Monto ($)', value: gasto.monto, type: 'number' }
+    ]);
+    if (!vals) return;
+
+    const nuevoMonto = parseFloat(vals.monto);
+    if (isNaN(nuevoMonto) || nuevoMonto <= 0) return;
+
+    gastosArray[index] = { nombre: vals.concepto.trim(), monto: nuevoMonto };
+    localStorage.setItem('vimarGastos', JSON.stringify(gastosArray));
+    actualizarGastosUI();
+    calcularTodo();
+    playSound('success');
+}
+
+async function editarIngresoManualActual(index) {
+    playSound('click');
+    const ingreso = ingresosManualesArray[index];
+    if (!ingreso) return;
+
+    const vals = await mostrarModalFormulario('Editar ingreso manual', [
+        { id: 'concepto', label: 'Concepto / Motivo', value: ingreso.nombre },
+        { id: 'monto', label: 'Monto ($)', value: ingreso.monto, type: 'number' }
+    ]);
+    if (!vals) return;
+
+    const nuevoMonto = parseFloat(vals.monto);
+    if (isNaN(nuevoMonto) || nuevoMonto <= 0) return;
+
+    ingresosManualesArray[index] = { nombre: vals.concepto.trim(), monto: nuevoMonto };
+    localStorage.setItem('vimarIngresosManuales', JSON.stringify(ingresosManualesArray));
+    actualizarIngresosManualesUI();
+    calcularTodo();
     playSound('success');
 }
 
 async function eliminarProductoUnico(nomSem, idxReg, idxProd) {
+    if (typeof playSound === 'function') playSound('click');
     // 1. Verificación de seguridad: ¿Existen los datos?
     if (!historialSemanas[nomSem] || !historialSemanas[nomSem][idxReg]) {
         console.error("No se encontró la semana o el registro solicitado.");
@@ -2059,4 +2232,398 @@ async function eliminarProductoUnico(nomSem, idxReg, idxProd) {
     if (typeof calcularTodo === 'function') calcularTodo(); // Recalcula totales generales
 
     console.log(`✅ Éxito: ${nombreP} eliminado. Datos sincronizados.`);
+}
+
+// ============================================================
+// SISTEMA DE ROLES / SESIÓN
+// ============================================================
+const VIMAR_USUARIOS = {
+    'admin': { pass: 'Vimar2024_.,', rol: 'admin' },
+    'vendedor': { pass: 'vimar2024', rol: 'vendedor' }
+};
+
+let vimarRolActual = null; // 'admin' | 'vendedor' | null
+
+function intentarLogin() {
+    if (typeof playSound === 'function') playSound('click');
+    const u = document.getElementById('login-usuario')?.value?.trim();
+    const p = document.getElementById('login-pass')?.value;
+    const errEl = document.getElementById('login-error');
+    const user = VIMAR_USUARIOS[u];
+    if (!user || user.pass !== p) {
+        if (errEl) { errEl.textContent = 'Usuario o contraseña incorrectos.'; errEl.style.display = 'block'; }
+        if (typeof playSound === 'function') playSound('error');
+        return;
+    }
+    vimarRolActual = user.rol;
+    sessionStorage.setItem('vimarRol', vimarRolActual);
+    sessionStorage.setItem('vimarUser', u);
+    document.getElementById('vimar-login-screen').style.display = 'none';
+    if (typeof playSound === 'function') playSound('success');
+    if (typeof vimarInicializarApp === 'function') vimarInicializarApp();
+}
+
+function aplicarPermisosPorRol() {
+    const esAdmin = vimarRolActual === 'admin';
+    // Botones sidebar exclusivos de admin
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = esAdmin ? '' : 'none';
+    });
+    // Botones bloqueados para vendedor (historial, stocks, gastos, inventario, backup)
+    const botonesAdmin = [
+        'verHistorial', 'verHistorialIngresosManuales', 'verHistorialGastos',
+        'verStocks', 'verHistorialInventario'
+    ];
+    document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
+        const onclick = btn.getAttribute('onclick') || '';
+        const esRestringido = botonesAdmin.some(fn => onclick.includes(fn));
+        if (esRestringido) btn.style.display = esAdmin ? '' : 'none';
+    });
+    // Sidebar footer buttons
+    document.querySelectorAll('.btn-exportar-backup, .btn-importar-backup, .btn-reiniciar-sistema')
+        .forEach(el => el.style.display = esAdmin ? '' : 'none');
+    // Botón cerrar sesión en topbar
+    const btnSesion = document.getElementById('btn-cerrar-sesion');
+    const lblUsuario = document.getElementById('btn-sesion-usuario');
+    if (btnSesion) btnSesion.style.display = 'flex';
+    if (lblUsuario) lblUsuario.textContent = sessionStorage.getItem('vimarUser') || vimarRolActual;
+}
+
+function cerrarSesion() {
+    sessionStorage.removeItem('vimarRol');
+    sessionStorage.removeItem('vimarUser');
+    vimarRolActual = null;
+    // Ocultar botón sesión
+    const btnSesion = document.getElementById('btn-cerrar-sesion');
+    if (btnSesion) btnSesion.style.display = 'none';
+    // Mostrar login
+    const loginEl = document.getElementById('vimar-login-screen');
+    if (loginEl) {
+        loginEl.style.display = 'flex';
+        document.getElementById('login-usuario').value = '';
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-error').style.display = 'none';
+    }
+    // Volver a inicio
+    if (typeof vimarActivarSeccionPrincipal === 'function') vimarActivarSeccionPrincipal();
+    if (typeof playSound === 'function') playSound('sidebar');
+}
+
+// (verificación de sesión movida a window.onload en ui.js)
+
+// ============================================================
+// GESTIÓN DINÁMICA DE PRODUCTOS (CRUD)
+// ============================================================
+// Carga productos customizados desde localStorage y los fusiona
+(function vimarCargarProductosCustom() {
+    const saved = localStorage.getItem('vimarProductosCustom');
+    if (!saved) return;
+    try {
+        const custom = JSON.parse(saved);
+
+        if (custom.liquidos) {
+            Object.keys(preciosLiquidos).forEach(p => {
+                if (!(p in custom.liquidos)) delete preciosLiquidos[p];
+            });
+            Object.assign(preciosLiquidos, custom.liquidos);
+        }
+        if (custom.articulos) {
+            Object.keys(baseArticulos).forEach(p => {
+                if (!(p in custom.articulos)) delete baseArticulos[p];
+            });
+            Object.assign(baseArticulos, custom.articulos);
+        }
+        if (custom.promos) {
+            Object.keys(promosArticulos).forEach(p => {
+                if (!(p in custom.promos)) delete promosArticulos[p];
+            });
+            Object.assign(promosArticulos, custom.promos);
+        }
+        if (custom.cats) {
+            Object.keys(categorias).forEach(cat => {
+                if (custom.cats[cat]) {
+                    categorias[cat].prods = [...custom.cats[cat]];
+                    if (custom.catColors?.[cat]) categorias[cat].color = custom.catColors[cat];
+                } else {
+                    categorias[cat].prods = [];
+                }
+            });
+        }
+        if (categorias['Artículos']) {
+            Object.keys(custom.articulos || {}).forEach(p => {
+                if (!categorias['Artículos'].prods.includes(p)) categorias['Artículos'].prods.push(p);
+            });
+        }
+    } catch(e) { console.error('Error cargando productos custom', e); }
+})();
+
+let _mpEditando = null; // nombre del producto en edición (null = nuevo)
+let _infoProductoAdminNombre = null;
+
+const _ETIQUETAS_LITROS = { 0.25: '250ml', 0.5: '500ml', 1: '1L', 2: '2L', 3: '3L' };
+
+function _obtenerCategoriaProducto(nombre) {
+    for (const [cat, data] of Object.entries(categorias)) {
+        if (data.prods.includes(nombre)) return cat;
+    }
+    return 'Sin categoría';
+}
+
+function _obtenerUnidadStock(nombre) {
+    return _obtenerCategoriaProducto(nombre) === 'Artículos' ? 'pzs' : 'lts';
+}
+
+function _construirHtmlInfoProducto(nombre) {
+    const cat = _obtenerCategoriaProducto(nombre);
+    const stock = stockProductos[nombre] != null ? stockProductos[nombre] : 0;
+    const unidad = _obtenerUnidadStock(nombre);
+    const esArt = !!baseArticulos[nombre];
+    let filas = '';
+
+    filas += `<div class="vimar-info-fila"><span class="vimar-info-label">Categoría</span><span class="vimar-info-valor">${cat}</span></div>`;
+    filas += `<div class="vimar-info-fila"><span class="vimar-info-label">Stock</span><span class="vimar-info-valor">${stock} ${unidad}</span></div>`;
+
+    if (esArt) {
+        filas += `<div class="vimar-info-fila"><span class="vimar-info-label">Precio unitario</span><span class="vimar-info-valor">$${baseArticulos[nombre].toFixed(2)}</span></div>`;
+        const promo = promosArticulos[nombre];
+        if (promo && Object.keys(promo).length) {
+            const promoTxt = Object.entries(promo).map(([k, v]) => `${k} uds → $${v}`).join(', ');
+            filas += `<div class="vimar-info-fila"><span class="vimar-info-label">Promoción</span><span class="vimar-info-valor">${promoTxt}</span></div>`;
+        }
+    } else {
+        const lp = preciosLiquidos[nombre] || {};
+        const orden = [0.25, 0.5, 1, 2, 3];
+        const precios = orden.filter(l => lp[l] > 0).map(l =>
+            `<div class="vimar-info-precio-item"><span>${_ETIQUETAS_LITROS[l]}</span><span>$${lp[l].toFixed(2)}</span></div>`
+        ).join('');
+        if (precios) {
+            filas += `<div class="vimar-info-seccion"><span class="vimar-info-label">Precios</span><div class="vimar-info-precios-grid">${precios}</div></div>`;
+        } else {
+            filas += `<div class="vimar-info-fila"><span class="vimar-info-label">Precios</span><span class="vimar-info-valor vimar-info-sin-dato">Sin precios registrados</span></div>`;
+        }
+    }
+
+    return filas;
+}
+
+function mostrarInfoProductoAdmin(nombre) {
+    _infoProductoAdminNombre = nombre;
+    const root = document.getElementById('vimar-popup-producto-info');
+    if (!root) return;
+    document.getElementById('vimar-popup-producto-titulo').textContent = nombre;
+    document.getElementById('vimar-popup-producto-contenido').innerHTML = _construirHtmlInfoProducto(nombre);
+    root.setAttribute('aria-hidden', 'false');
+    root.classList.add('vimar-modal-confirmar--visible');
+    vimarActualizarCapaModalBody();
+    if (typeof playSound === 'function') playSound('click');
+}
+
+function cerrarInfoProductoAdmin(conSonido = true) {
+    const root = document.getElementById('vimar-popup-producto-info');
+    if (!root) return;
+    const estabaAbierto = root.classList.contains('vimar-modal-confirmar--visible');
+    root.setAttribute('aria-hidden', 'true');
+    root.classList.remove('vimar-modal-confirmar--visible');
+    _infoProductoAdminNombre = null;
+    vimarActualizarCapaModalBody();
+    if (conSonido && estabaAbierto && typeof playSound === 'function') playSound('click');
+}
+
+function abrirModalEditarProductoDesdeInfo() {
+    const nombre = _infoProductoAdminNombre;
+    if (!nombre) return;
+    cerrarInfoProductoAdmin(false);
+    abrirModalEditarProducto(nombre);
+}
+
+function abrirModalAgregarProducto() {
+    _mpEditando = null;
+    _rellenarFormProducto(null, null);
+    document.getElementById('modal-producto-titulo').textContent = 'Agregar Producto';
+    _mostrarModalProducto();
+}
+
+function abrirModalEditarProducto(nombre) {
+    _mpEditando = nombre;
+    // Detectar si es artículo
+    const esArt = !!baseArticulos[nombre];
+    // Buscar categoría
+    let catNombre = 'Artículos';
+    Object.keys(categorias).forEach(c => { if (categorias[c].prods.includes(nombre)) catNombre = c; });
+    _rellenarFormProducto(nombre, catNombre);
+    document.getElementById('modal-producto-titulo').textContent = 'Editar Producto';
+    _mostrarModalProducto();
+}
+
+function _mostrarModalProducto() {
+    const m = document.getElementById('vimar-modal-producto');
+    if (!m) return;
+    m.setAttribute('aria-hidden','false');
+    m.classList.add('vimar-modal-confirmar--visible');
+    vimarActualizarCapaModalBody();
+    _actualizarSeccionesFormProducto();
+    if (typeof playSound === 'function') playSound('click');
+}
+
+function cerrarModalProducto(conSonido = true) {
+    const m = document.getElementById('vimar-modal-producto');
+    if (!m) return;
+    const estabaAbierto = m.classList.contains('vimar-modal-confirmar--visible');
+    m.setAttribute('aria-hidden','true');
+    m.classList.remove('vimar-modal-confirmar--visible');
+    vimarActualizarCapaModalBody();
+    _mpEditando = null;
+    if (conSonido && estabaAbierto && typeof playSound === 'function') playSound('click');
+}
+
+function _rellenarFormProducto(nombre, catNombre) {
+    // Poblar select categorías
+    const sel = document.getElementById('mp-categoria');
+    sel.innerHTML = '';
+    Object.keys(categorias).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        if (c === catNombre) opt.selected = true;
+        sel.appendChild(opt);
+    });
+
+    document.getElementById('mp-nombre').value = nombre || '';
+    // Precios líquidos
+    const lp = nombre && preciosLiquidos[nombre] ? preciosLiquidos[nombre] : {};
+    document.getElementById('mp-p025').value = lp[0.25] || '';
+    document.getElementById('mp-p05').value  = lp[0.5]  || '';
+    document.getElementById('mp-p1').value   = lp[1]    || '';
+    document.getElementById('mp-p2').value   = lp[2]    || '';
+    document.getElementById('mp-p3').value   = lp[3]    || '';
+    // Artículo
+    document.getElementById('mp-pu').value = nombre && baseArticulos[nombre] ? baseArticulos[nombre] : '';
+    // Promo
+    const promo = nombre && promosArticulos[nombre] ? promosArticulos[nombre] : {};
+    const promoStr = Object.entries(promo).map(([k,v]) => `${k}:${v}`).join(', ');
+    document.getElementById('mp-promo').value = promoStr;
+    document.getElementById('mp-stock').value = nombre && stockProductos[nombre] != null ? stockProductos[nombre] : 0;
+
+    sel.addEventListener('change', _actualizarSeccionesFormProducto, { once: false });
+    _actualizarSeccionesFormProducto();
+}
+
+function _actualizarSeccionesFormProducto() {
+    const cat = document.getElementById('mp-categoria')?.value;
+    const esArt = cat === 'Artículos';
+    document.getElementById('mp-seccion-liquido').style.display = esArt ? 'none' : '';
+    document.getElementById('mp-seccion-articulo').style.display = esArt ? '' : 'none';
+    const lblStock = document.getElementById('mp-stock-label');
+    if (lblStock) lblStock.textContent = esArt ? 'Stock (pzs)' : 'Stock (lts)';
+}
+
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'mp-categoria') _actualizarSeccionesFormProducto();
+});
+
+function guardarProductoModal() {
+    if (typeof playSound === 'function') playSound('click');
+    const nombre = document.getElementById('mp-nombre').value.trim();
+    const cat = document.getElementById('mp-categoria').value;
+    if (!nombre) { if(typeof playSound==='function') playSound('error'); return; }
+
+    const esArt = cat === 'Artículos';
+    const nombreViejo = _mpEditando;
+
+    // Si renombra, quitar el viejo
+    if (nombreViejo && nombreViejo !== nombre) {
+        _quitarProductoDeCatalogo(nombreViejo);
+    }
+
+    if (esArt) {
+        const pu = parseFloat(document.getElementById('mp-pu').value) || 0;
+        baseArticulos[nombre] = pu;
+        // Promo
+        const promoRaw = document.getElementById('mp-promo').value.trim();
+        if (promoRaw) {
+            promosArticulos[nombre] = {};
+            promoRaw.split(',').forEach(par => {
+                const [k, v] = par.split(':').map(x => x.trim());
+                if (k && v) promosArticulos[nombre][parseFloat(k)] = parseFloat(v);
+            });
+        } else {
+            delete promosArticulos[nombre];
+        }
+        // Quitar de liquidos si existia
+        delete preciosLiquidos[nombre];
+    } else {
+        const lp = {};
+        const v025 = parseFloat(document.getElementById('mp-p025').value);
+        const v05  = parseFloat(document.getElementById('mp-p05').value);
+        const v1   = parseFloat(document.getElementById('mp-p1').value);
+        const v2   = parseFloat(document.getElementById('mp-p2').value);
+        const v3   = parseFloat(document.getElementById('mp-p3').value);
+        if (!isNaN(v025) && v025 > 0) lp[0.25] = v025;
+        if (!isNaN(v05)  && v05  > 0) lp[0.5]  = v05;
+        if (!isNaN(v1)   && v1   > 0) lp[1]    = v1;
+        if (!isNaN(v2)   && v2   > 0) lp[2]    = v2;
+        if (!isNaN(v3)   && v3   > 0) lp[3]    = v3;
+        preciosLiquidos[nombre] = lp;
+        // Quitar de articulos si existia
+        delete baseArticulos[nombre];
+        delete promosArticulos[nombre];
+    }
+
+    // Agregar a categoría
+    if (!categorias[cat].prods.includes(nombre)) {
+        categorias[cat].prods.push(nombre);
+    }
+
+    // Persistir
+    _persistirProductosCustom();
+
+    const stockRaw = document.getElementById('mp-stock').value;
+    const stockVal = stockRaw === '' ? 0 : parseFloat(stockRaw);
+    if (isNaN(stockVal) || stockVal < 0) {
+        if (typeof playSound === 'function') playSound('error');
+        return;
+    }
+    stockProductos[nombre] = stockVal;
+    localStorage.setItem('vimarStock', JSON.stringify(stockProductos));
+
+    cerrarModalProducto(false);
+    if (typeof playSound === 'function') playSound('success');
+
+    // Re-renderizar catálogos
+    if (typeof renderizarCatalogo === 'function') renderizarCatalogo();
+    if (typeof renderizarSeccionStocks === 'function') renderizarSeccionStocks();
+}
+
+function _quitarProductoDeCatalogo(nombre) {
+    Object.keys(categorias).forEach(c => {
+        const idx = categorias[c].prods.indexOf(nombre);
+        if (idx > -1) categorias[c].prods.splice(idx, 1);
+    });
+    delete preciosLiquidos[nombre];
+    delete baseArticulos[nombre];
+    delete promosArticulos[nombre];
+    delete stockProductos[nombre];
+}
+
+async function eliminarProductoCatalogo(nombre) {
+    if (typeof mostrarModalConfirmar !== 'function') return;
+    if (typeof playSound === 'function') playSound('click');
+    const ok = await mostrarModalConfirmar(`¿Eliminar "${nombre}" del catálogo?`, { titulo: 'Eliminar producto', peligroso: true, btnOk: 'Eliminar' });
+    if (!ok) return;
+    _quitarProductoDeCatalogo(nombre);
+    _persistirProductosCustom();
+    localStorage.setItem('vimarStock', JSON.stringify(stockProductos));
+    if (typeof playSound === 'function') playSound('delete');
+    if (typeof renderizarCatalogo === 'function') renderizarCatalogo();
+    if (typeof renderizarSeccionStocks === 'function') renderizarSeccionStocks();
+}
+
+function _persistirProductosCustom() {
+    // Guardar solo los productos que EXISTEN en las estructuras de datos
+    const custom = { liquidos: preciosLiquidos, articulos: baseArticulos, promos: promosArticulos, cats: {}, catColors: {} };
+    Object.keys(categorias).forEach(c => {
+        custom.cats[c] = [...categorias[c].prods];
+        custom.catColors[c] = categorias[c].color;
+    });
+    localStorage.setItem('vimarProductosCustom', JSON.stringify(custom));
 }
