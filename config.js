@@ -33,33 +33,33 @@ const preciosLiquidos = {
 };
 
 const baseArticulos = {
-	"Escoba Corta": 35, "Escoba Simple": 42, "Escoba Larga": 42, "Cepillo Chueco": 42, "Escoba Veneciana": 50,
-	"Escoba Italy": 50, "Trapeador Carpe": 45, "Trapeador Simple": 40, "Trapeador Amarillo": 40, "Trapeador Azul": 35,
-	"Trapeador Giratorio": 250, "Recogedor": 25, "Escurridor": 30, "Destapacaños": 18, "Cepillo Para Retrete": 30,
-	"Fibra Verde": 3, "Fibra Esponja": 4, "Fibra Espiral": 5, "Fibra Centella": 5, "Fibra Blanca": 25,
-	"Fibra Metálica Chica": 7, "Fibra Metálica Mediana": 10, "Fibra Metálica Grande": 13, "Estropajo Cuadrado": 9,
-	"Cubeta Chica": 25, "Cubeta Exprimidora": 90, "Cubeta Exprimidora Grande": 100, "Gancho Para Ropa": 3,
-	"Pinza Para Ropa": 20, "Mecate Café": 16, "Mecate Blanco": 17, "Cepillo Plancha": 13, "Cepillo Manual": 13, "Fashion Argolla": 18,
-	"Coladera Chica": 5, "Coladera Mediana": 8, "Coladera Grande": 12, "Coladera Extra Grande": 25,
-	"Escurridor Cuadrado": 13, "Escurridor De Verdura": 15, "Palangana": 25, "Cesto Fatima": 28,
-	"Jerga De 1 Metro": 18, "Jerga De Cocina": 6, "Atrapa Moscas": 3, "Trampa Para Ratones": 20,
-	"Atomizador De 500 ml": 15, "Disparador De Atomizador": 13, "Neutralizador Aromatizante": 70,
-	"Liquido Para Estufa (MONY)": 20, "Pastilla De Cloro": 5, "Guantes": 20, "Bolsa Negra Mediana": 3,
-	"Bolsa Negra Jumbo": 8, "Cerillos": 3, "Encendedor" : 5 
+    "Escoba Corta": 35, "Escoba Simple": 42, "Escoba Larga": 42, "Cepillo Chueco": 42, "Escoba Veneciana": 50,
+    "Escoba Italy": 50, "Trapeador Carpe": 45, "Trapeador Simple": 40, "Trapeador Amarillo": 40, "Trapeador Azul": 35,
+    "Trapeador Giratorio": 250, "Recogedor": 25, "Escurridor": 30, "Destapacaños": 18, "Cepillo Para Retrete": 30,
+    "Fibra Verde": 3, "Fibra Esponja": 4, "Fibra Espiral": 5, "Fibra Centella": 5, "Fibra Blanca": 25,
+    "Fibra Metálica Chica": 7, "Fibra Metálica Mediana": 10, "Fibra Metálica Grande": 13, "Estropajo Cuadrado": 9,
+    "Cubeta Chica": 25, "Cubeta Exprimidora": 90, "Cubeta Exprimidora Grande": 100, "Gancho Para Ropa": 3,
+    "Pinza Para Ropa": 20, "Mecate Café": 16, "Mecate Blanco": 17, "Cepillo Plancha": 13, "Cepillo Manual": 13, "Fashion Argolla": 18,
+    "Coladera Chica": 5, "Coladera Mediana": 8, "Coladera Grande": 12, "Coladera Extra Grande": 25,
+    "Escurridor Cuadrado": 13, "Escurridor De Verdura": 15, "Palangana": 25, "Cesto Fatima": 28,
+    "Jerga De 1 Metro": 18, "Jerga De Cocina": 6, "Atrapa Moscas": 3, "Trampa Para Ratones": 20,
+    "Atomizador De 500 ml": 15, "Disparador De Atomizador": 13, "Neutralizador Aromatizante": 70,
+    "Liquido Para Estufa (MONY)": 20, "Pastilla De Cloro": 5, "Guantes": 20, "Bolsa Negra Mediana": 3,
+    "Bolsa Negra Jumbo": 8, "Cerillos": 3, "Encendedor" : 5 
 };
 
 const promosArticulos = { "Gancho Para Ropa": { 10: 27 } };
 
 const categorias = {
-	"Detergentes": {color: "var(--cat-detergente)", prods: ["Persil Verde", "Persil Transparente", "Mas Color", "Ariel", "Zote Blanco", "Zote Rosa", "Zote Con Pinol", "Foca", "Vanish Rosa", "Ace", "Roma", "Vel Rosita", "Desmugrante", "Carisma", "Axion Limon"]},
-	"Suavizantes": {color: "var(--cat-suavizante)", prods: ["S Carisma", "S Paris Hilton", "S Primavera", "S Vainilla/Floral", "S Downy", "S Bebe", "S Frutal","S Jazmin", "S Microcapsulas"]},
-	"Limpiador Multiusos": {color: "var(--cat-limpiador)", prods: ["F Manzana Canela", "F Chica Fresa", "F Brisa Marina", "F Channel", "F Chicle", "F Limon", "F Menta", "F Lavanda", "F Naranja", "Pinol Blanco", "Pinol Verde", "Maestro Limpio"]},
-	"Aromatizantes": {color: "var(--cat-aromatizante)", prods: ["A Manzana Canela", "A Chica Fresa", "A Channel", "A Durazno"]},
-	"Cloros": {color: "var(--cat-cloro)", prods: ["Cloro", "Hipoclorito", "Cloro En Gel"]},
-	"Shampoo Manos": {color: "var(--cat-shampoo-m)", prods: ["Shampoo M Durazno", "Shampoo M Naranja", "Shampoo M Manzana Canela", "Shampoo M Frutal"]},
-	"Shampoo Capilar": {color: "var(--cat-shampoo-c)", prods: ["Shampoo C Fresa", "Shampoo C Coco", "Shampoo C Durazno"]},
-	"Otros Líquidos": {color: "var(--cat-otros)", prods: ["Sarricida", "Desengrasante Rosa", "Desengrasante Amarillo", "Shampoo Para Mascotas", "Creolina", "Acido Domestico", "Almorol", "Neutralizador De Aromas", "Liquido Azul"]},
-	"Artículos": {color: "var(--cat-articulos)", prods: Object.keys(baseArticulos)} 
+    "Detergentes": {color: "var(--cat-detergente)", prods: ["Persil Verde", "Persil Transparente", "Mas Color", "Ariel", "Zote Blanco", "Zote Rosa", "Zote Con Pinol", "Foca", "Vanish Rosa", "Ace", "Roma", "Vel Rosita", "Desmugrante", "Carisma", "Axion Limon"]},
+    "Suavizantes": {color: "var(--cat-suavizante)", prods: ["S Carisma", "S Paris Hilton", "S Primavera", "S Vainilla/Floral", "S Downy", "S Bebe", "S Frutal","S Jazmin", "S Microcapsulas"]},
+    "Limpiador Multiusos": {color: "var(--cat-limpiador)", prods: ["F Manzana Canela", "F Chica Fresa", "F Brisa Marina", "F Channel", "F Chicle", "F Limon", "F Menta", "F Lavanda", "F Naranja", "Pinol Blanco", "Pinol Verde", "Maestro Limpio"]},
+    "Aromatizantes": {color: "var(--cat-aromatizante)", prods: ["A Manzana Canela", "A Chica Fresa", "A Channel", "A Durazno"]},
+    "Cloros": {color: "var(--cat-cloro)", prods: ["Cloro", "Hipoclorito", "Cloro En Gel"]},
+    "Shampoo Manos": {color: "var(--cat-shampoo-m)", prods: ["Shampoo M Durazno", "Shampoo M Naranja", "Shampoo M Manzana Canela", "Shampoo M Frutal"]},
+    "Shampoo Capilar": {color: "var(--cat-shampoo-c)", prods: ["Shampoo C Fresa", "Shampoo C Coco", "Shampoo C Durazno"]},
+    "Otros Líquidos": {color: "var(--cat-otros)", prods: ["Sarricida", "Desengrasante Rosa", "Desengrasante Amarillo", "Shampoo Para Mascotas", "Creolina", "Acido Domestico", "Almorol", "Neutralizador De Aromas", "Liquido Azul"]},
+    "Artículos": {color: "var(--cat-articulos)", prods: Object.keys(baseArticulos)} 
 };
 
 // Ahora cargamos un objeto de semanas o uno vacío
