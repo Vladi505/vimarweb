@@ -31,6 +31,7 @@ function vimarActivarSeccion(id) {
 
 // Helper: abre/cierra carpeta animada
 function toggleCarpeta(header, cuerpo, caret) {
+    if (typeof playSound === 'function') playSound('click');
     const estaAbierto = !cuerpo.classList.contains('oculto');
     cuerpo.classList.toggle('oculto');
     header.classList.toggle('abierto', !estaAbierto);
@@ -301,7 +302,10 @@ function actualizarGastosUI() {
         item.style.setProperty('--vimar-stagger-delay', `${i * 45}ms`);
         item.innerHTML = `
             <span class="lista-gasto-ingreso-texto">• ${g.nombre}: <b class="monto-ui-gasto">- $${g.monto.toFixed(2)}</b></span>
-            <button class="delete-btn" onclick="borrarGasto(${i})">✕</button>
+            <div class="lista-gasto-ingreso-acciones">
+                <button class="btn-edit-small" onclick="editarGastoActual(${i})" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                <button class="delete-btn" onclick="borrarGasto(${i})">✕</button>
+            </div>
         `;
         c.appendChild(item);
     });
@@ -324,7 +328,10 @@ function actualizarIngresosManualesUI() {
         item.style.setProperty('--vimar-stagger-delay', `${idx * 45}ms`);
         item.innerHTML = `
             <span class="lista-gasto-ingreso-texto">• ${i.nombre}: <b class="monto-ui-ingreso">+ $${i.monto.toFixed(2)}</b></span>
-            <button class="delete-btn" onclick="borrarIngresoManual(${idx})">✕</button>
+            <div class="lista-gasto-ingreso-acciones">
+                <button class="btn-edit-small" onclick="editarIngresoManualActual(${idx})" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                <button class="delete-btn" onclick="borrarIngresoManual(${idx})">✕</button>
+            </div>
         `;
         c.appendChild(item);
     });
@@ -894,40 +901,54 @@ function renderizarSeccionStocks() {
             const estadoCls = esVacio ? 'stock-caja--vacio' : esCritico ? 'stock-caja--critico' : esAdvertencia ? 'stock-caja--advertencia' : 'stock-caja--ok';
             box.className = `stock-caja ${estadoCls}`;
             box.style.setProperty('--stock-accent', estadoColor);
+            box.style.cursor = 'pointer';
+            box.title = 'Clic para ver datos del producto';
 
             const badgeCls = esVacio ? 'stock-caja-badge--vacio' : (esCritico || esAdvertencia) ? 'stock-caja-badge--alerta' : 'stock-caja-badge--ok';
 
-                box.innerHTML = `
+            box.innerHTML = `
                 <div class="stock-caja-relleno" style="--stock-fill-h:${porcentaje}%"></div>
-
-                <div class="stock-caja-acciones">
-                    <button onclick="event.stopPropagation(); añadirStockManual('${p}')" 
-                        class="btn-stock-accion btn-stock-accion--themed" title="Sumar Stock">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                    <button onclick="event.stopPropagation(); editarStockDirecto('${p}')" 
-                        class="btn-stock-accion btn-stock-accion--themed" title="Corregir Stock">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-
-                <span class="stock-caja-nombre${esVacio ? ' stock-caja-nombre--vacio' : ''}">
-                    ${p}
-                </span>
-                    
+                <div class="stock-caja-acciones"></div>
+                <span class="stock-caja-nombre${esVacio ? ' stock-caja-nombre--vacio' : ''}">${p}</span>
                 <div class="stock-caja-monto-wrap">
-                    <span class="stock-caja-monto-valor">
-                        ${stock}
-                    </span>
-                    <span class="stock-caja-monto-unidad">
-                        ${unidad}
-                    </span>
+                    <span class="stock-caja-monto-valor">${stock}</span>
+                    <span class="stock-caja-monto-unidad">${unidad}</span>
                 </div>
-
-                <div class="stock-caja-badge ${badgeCls}">
-                    ${textoEstado}
-                </div>
+                <div class="stock-caja-badge ${badgeCls}">${textoEstado}</div>
             `;
+
+            box.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                mostrarInfoProductoAdmin(p);
+            });
+
+            const acciones = box.querySelector('.stock-caja-acciones');
+
+            const btnPlus = document.createElement('button');
+            btnPlus.type = 'button';
+            btnPlus.className = 'btn-stock-accion btn-stock-accion--themed btn-stock-accion--plus';
+            btnPlus.title = 'Sumar stock';
+            btnPlus.innerHTML = '<i class="fas fa-plus"></i>';
+            btnPlus.addEventListener('click', (e) => { e.stopPropagation(); añadirStockManual(p); });
+
+            const btnEdit = document.createElement('button');
+            btnEdit.type = 'button';
+            btnEdit.className = 'btn-stock-accion btn-stock-accion--editar';
+            btnEdit.title = 'Editar producto';
+            btnEdit.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+            btnEdit.addEventListener('click', (e) => { e.stopPropagation(); abrirModalEditarProducto(p); });
+
+            const btnDel = document.createElement('button');
+            btnDel.type = 'button';
+            btnDel.className = 'btn-stock-accion btn-stock-accion--eliminar';
+            btnDel.title = 'Eliminar producto';
+            btnDel.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            btnDel.addEventListener('click', (e) => { e.stopPropagation(); eliminarProductoCatalogo(p); });
+
+            acciones.appendChild(btnPlus);
+            acciones.appendChild(btnEdit);
+            acciones.appendChild(btnDel);
+
             grid.appendChild(box);
         });
         divCat.appendChild(grid);
@@ -1063,6 +1084,7 @@ function removerTodosLosFocus() {
 }
 
 async function confirmarBorrado(btn, nombre) {
+    if (typeof playSound === 'function') playSound('click');
     const ok = await mostrarModalConfirmar(
         `¿Quitar ${nombre}?`,
         { titulo: 'Quitar producto', peligroso: true, btnOk: 'Quitar' }
@@ -1090,10 +1112,13 @@ function alternarTema() {
 }
 
 document.addEventListener('keydown', (e) => {
+    // Ignorar atajos si no hay sesión activa
+    if (!vimarRolActual) return;
     // ESC - Limpiar y quitar foco del buscador (el modal de confirmación captura ESC antes)
     if (e.key === 'Escape') {
         if (document.body.classList.contains('vimar-modal-abierto')) return;
         const buscador = document.getElementById('inputBusqueda');
+        if (!buscador) return;
         buscador.value = "";       // Borra el texto
         filtrarCatalogo();         // Refresca el catálogo para mostrar todo
         buscador.blur();           // Quita el cursor del buscador
@@ -1140,8 +1165,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-window.onload = () => {
-    // --- RELOJ EN TIEMPO REAL ---
+function vimarInicializarApp() {
     function actualizarReloj() {
         const ahora = new Date();
         const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -1186,7 +1210,7 @@ window.onload = () => {
 
     const seccionGuardada = localStorage.getItem('vimarSeccionActual');
         
-    if (seccionGuardada === 'stocks') {
+    if (seccionGuardada === 'stocks' || seccionGuardada === 'adminProductos') {
         vimarActivarSeccion('seccionStocks');
         actualizarVisualFiltro();
         renderizarSeccionStocks();
@@ -1260,4 +1284,19 @@ window.onload = () => {
     calcularTodo();
     inicializarStockSiVacio();
 
+    // Aplicar permisos
+    aplicarPermisosPorRol();
+}
+
+window.onload = () => {
+    const _rolGuardado = sessionStorage.getItem('vimarRol');
+    const loginEl = document.getElementById('vimar-login-screen');
+    if (_rolGuardado) {
+        vimarRolActual = _rolGuardado;
+        if (loginEl) loginEl.style.display = 'none';
+        vimarInicializarApp();
+    } else {
+        if (loginEl) loginEl.style.display = 'flex';
+        setTimeout(() => document.getElementById('login-usuario')?.focus(), 100);
+    }
 };
