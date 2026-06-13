@@ -1081,6 +1081,9 @@ td {
 .btn-stock-accion:hover {
     background: white !important;
     color: black !important;
+    filter: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
 }
 
 #contenedorTablasHistorial {
@@ -1242,8 +1245,26 @@ td {
     background: #050505;
     color: white;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 20px;
     z-index: 900;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-blue) transparent;
+    scrollbar-gutter: auto;
+}
+
+.seccion::-webkit-scrollbar {
+    width: 5px;
+}
+
+.seccion::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.seccion::-webkit-scrollbar-thumb {
+    background: var(--neon-blue);
+    border-radius: 10px;
 }
 
 .casilla {
@@ -1535,8 +1556,16 @@ td {
     transition: all 0.2s ease;
 }
 
-.tabla-historial-vimar button:hover {
+/* Solo lápiz / acciones no destructivas en tablas de historial */
+.tabla-historial-vimar button:not(.btn-delete-prod):not(.btn-delete-small):not(.delete-btn):hover {
     filter: drop-shadow(0 0 8px var(--neon-blue));
+    transform: scale(1.2);
+}
+
+.tabla-historial-vimar .btn-delete-prod:hover,
+.tabla-historial-vimar .btn-delete-small:hover,
+.tabla-historial-vimar .delete-btn:hover {
+    filter: drop-shadow(0 0 6px var(--neon-red)) drop-shadow(0 0 12px rgba(255, 49, 49, 0.7)) !important;
     transform: scale(1.2);
 }
 
@@ -2524,12 +2553,13 @@ body.vimar-modal-abierto {
 .header-toggle-gastos {
     cursor: pointer;
     background: #111;
-    padding: 15px;
+    padding: 15px 20px 15px 15px;
     border-left: 5px solid var(--neon-red);
     display: flex;
     justify-content: space-between;
     align-items: center;
     user-select: none;
+    overflow: visible;
 }
 
 .header-toggle-gastos__izq,
@@ -2537,12 +2567,17 @@ body.vimar-modal-abierto {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.header-toggle-gastos__izq {
     overflow: hidden;
+    min-width: 0;
 }
 
 .header-toggle-gastos__der {
     gap: 12px;
     flex-shrink: 0;
+    overflow: visible;
 }
 
 .header-toggle-gastos__titulo {
@@ -2572,6 +2607,9 @@ body.vimar-modal-abierto {
 
 .btn-delete-semana-header {
     padding: 5px;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
 }
 
 .contenido-historial-gasto-inner {
@@ -2651,12 +2689,13 @@ body.vimar-modal-abierto {
 .header-toggle-ingresos-manuales {
     cursor: pointer;
     background: #111;
-    padding: 15px;
+    padding: 15px 20px 15px 15px;
     border-left: 5px solid var(--neon-green);
     display: flex;
     justify-content: space-between;
     align-items: center;
     user-select: none;
+    overflow: visible;
 }
 
 .header-toggle-ingresos-manuales .header-toggle-gastos__izq,
@@ -2664,12 +2703,17 @@ body.vimar-modal-abierto {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.header-toggle-ingresos-manuales .header-toggle-gastos__izq {
     overflow: hidden;
+    min-width: 0;
 }
 
 .header-toggle-ingresos-manuales .header-toggle-gastos__der {
     gap: 12px;
     flex-shrink: 0;
+    overflow: visible;
 }
 
 .header-toggle-ingresos-manuales__titulo {
@@ -2796,8 +2840,61 @@ body.vimar-modal-abierto {
     right: 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     z-index: 10;
+}
+
+.btn-stock-accion--editar {
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+}
+
+.btn-stock-accion--eliminar {
+    border: 1px solid var(--neon-red);
+    color: var(--neon-red);
+}
+
+/* Brillo rojo unificado — eliminar / X (excepto tanques inventario) */
+.delete-btn:hover,
+.btn-delete-small:hover,
+.btn-delete-prod:hover,
+.btn-delete-historial-fila:hover,
+.delete-btn-historial:hover,
+.inv-icon-trash:hover {
+    color: var(--neon-red) !important;
+    filter: drop-shadow(0 0 6px var(--neon-red)) drop-shadow(0 0 12px rgba(255, 49, 49, 0.75)) !important;
+    text-shadow: 0 0 10px rgba(255, 49, 49, 0.85);
+}
+
+.btn-delete-venta-ticket:hover {
+    background: rgba(255, 49, 49, 0.15) !important;
+    color: var(--neon-red) !important;
+    border-color: var(--neon-red) !important;
+    box-shadow: 0 0 10px rgba(255, 49, 49, 0.55);
+    filter: drop-shadow(0 0 6px var(--neon-red));
+}
+
+.btn-stock-accion:hover,
+.btn-stock-accion--eliminar:hover {
+    background: white !important;
+    color: black !important;
+    filter: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.stock-toolbar {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 24px auto;
+    max-width: 1570px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.btn-agregar-producto-stock {
+    width: auto !important;
+    padding: 12px 30px !important;
 }
 
 .btn-stock-accion--themed {
@@ -2953,4 +3050,105 @@ body.vimar-modal-abierto {
 
 .inv-icon-trash {
     cursor: pointer;
+}
+
+/* ============================================================
+   ESTILOS ADMIN / LOGIN (dark)
+   ============================================================ */
+#vimar-login-screen .vimar-modal-prompt-input {
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    border: 1px solid rgba(0,242,255,0.3);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-size: 1em;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+#vimar-login-screen .vimar-modal-prompt-input:focus {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 18px rgba(0,242,255,0.2);
+}
+
+.vimar-popup-producto-caja {
+    max-width: 420px;
+}
+
+.vimar-popup-producto-contenido {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.vimar-info-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vimar-info-seccion {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vimar-info-label {
+    font-size: 0.75em;
+    color: #888;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.vimar-info-valor {
+    font-weight: 700;
+    color: #efefef;
+    text-align: right;
+}
+
+.vimar-info-sin-dato {
+    color: #666;
+    font-weight: 500;
+}
+
+.vimar-info-precios-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.vimar-info-precio-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95em;
+    color: #ccc;
+}
+
+.vimar-info-precio-item span:last-child {
+    font-weight: 700;
+    color: var(--neon-green);
+}
+
+.vimar-modal-formulario-caja {
+    max-width: 560px;
+}
+
+.vimar-modal-formulario-campos {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.lista-gasto-ingreso-acciones {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
