@@ -19,6 +19,27 @@
             <span id="reloj-fecha" class="reloj-fecha"></span>
             <span id="reloj-hora" class="reloj-hora"></span>
         </div>
+        <button id="btn-cerrar-sesion" onclick="cerrarSesion()" title="Cerrar sesión" style="
+            display:none;
+            align-items:center;gap:7px;
+            background:rgba(255,49,49,0.12);
+            border:1px solid rgba(255,49,49,0.4);
+            border-radius:8px;
+            padding:5px 12px;
+            color:#ff3131;
+            font-size:0.78em;
+            font-weight:800;
+            letter-spacing:0.8px;
+            cursor:pointer;
+            text-transform:uppercase;
+            transition:all 0.2s;
+            white-space:nowrap;
+        "
+        onmouseover="this.style.background='#ff3131';this.style.color='#fff'"
+        onmouseout="this.style.background='rgba(255,49,49,0.12)';this.style.color='#ff3131'">
+            <i class="fas fa-sign-out-alt"></i>
+            <span id="btn-sesion-usuario"></span>
+        </button>
         <div class="theme-switch-wrapper">
             <i class="fas fa-moon" style="color: #888; font-size: 0.8em;"></i>
             <label class="theme-switch" for="checkbox-theme">
@@ -55,7 +76,7 @@
                 <button onclick="exportarBackup()" class="btn-exportar-backup" onmouseover="this.style.background='#ffA500'; this.style.color='#000';" onmouseout="this.style.background='rgba(255, 165, 0, 0.1)'; this.style.color='#ffA500';">
                     <i class="fas fa-download"></i> Exportar Backup (JSON)
                 </button>
-                <button onclick="document.getElementById('importFile').click()" class="btn-importar-backup" onmouseover="this.style.background='#ffff00'; this.style.color='#000';" onmouseout="this.style.background='rgba(255, 255, 0, 0.1)'; this.style.color='#ffff00';">
+                <button onclick="abrirSelectorImportarBackup()" class="btn-importar-backup" onmouseover="this.style.background='#ffff00'; this.style.color='#000';" onmouseout="this.style.background='rgba(255, 255, 0, 0.1)'; this.style.color='#ffff00';">
                     <i class="fas fa-upload"></i> Importar Backup (JSON)
                 </button>
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importarBackup(event)">
@@ -203,6 +224,11 @@
                 <div id="indicadorFiltro" class="indicador-filtro-tanques"></div>
                 <span id="txtFiltro" class="txt-filtro-tanques">Mostrar Todo</span>
             </div>
+            <div class="stock-toolbar admin-only" style="display:none;">
+                <button type="button" class="btn btn-dia btn-agregar-producto-stock" onclick="abrirModalAgregarProducto()">
+                    <i class="fas fa-plus"></i> Agregar Producto
+                </button>
+            </div>
             <div id="contenedorStocks" class="contenedor-stocks"></div>
         </section>
         <div id="seccionHistorialInventario" class="seccion">
@@ -265,6 +291,107 @@
                 <button type="button" id="vimar-modal-prompt-cancel" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--ghost">Cancelar</button>
                 <button type="button" id="vimar-modal-prompt-ok" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Aceptar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- POPUP INFO PRODUCTO (admin) -->
+    <div id="vimar-popup-producto-info" class="vimar-modal-confirmar" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="vimar-modal-confirmar-backdrop" onclick="cerrarInfoProductoAdmin()"></div>
+        <div class="vimar-modal-confirmar-caja vimar-popup-producto-caja">
+            <div class="vimar-modal-confirmar-glow"></div>
+            <h3 id="vimar-popup-producto-titulo" class="vimar-modal-confirmar-titulo"></h3>
+            <div id="vimar-popup-producto-contenido" class="vimar-popup-producto-contenido"></div>
+            <div class="vimar-modal-confirmar-actions">
+                <button type="button" onclick="abrirModalEditarProductoDesdeInfo()" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--ghost">
+                    <i class="fas fa-pencil-alt"></i> Editar
+                </button>
+                <button type="button" onclick="cerrarInfoProductoAdmin()" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORMULARIO UNIFICADO (edición multi-campo) -->
+    <div id="vimar-modal-formulario" class="vimar-modal-confirmar" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="vimar-modal-confirmar-backdrop" onclick="cerrarModalFormulario(null)"></div>
+        <div class="vimar-modal-confirmar-caja vimar-modal-formulario-caja">
+            <div class="vimar-modal-confirmar-glow"></div>
+            <h3 id="vimar-modal-formulario-titulo" class="vimar-modal-confirmar-titulo">Editar</h3>
+            <div id="vimar-modal-formulario-campos" class="vimar-modal-formulario-campos"></div>
+            <div class="vimar-modal-confirmar-actions">
+                <button type="button" onclick="cerrarModalFormulario(null)" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--ghost">Cancelar</button>
+                <button type="button" onclick="confirmarModalFormulario()" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PRODUCTO (agregar/editar) -->
+    <div id="vimar-modal-producto" class="vimar-modal-confirmar" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="vimar-modal-confirmar-backdrop" onclick="cerrarModalProducto()"></div>
+        <div class="vimar-modal-confirmar-caja" style="max-width:560px;">
+            <div class="vimar-modal-confirmar-glow"></div>
+            <h3 id="modal-producto-titulo" class="vimar-modal-confirmar-titulo">Producto</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+                <div>
+                    <label style="font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Nombre</label>
+                    <input type="text" id="mp-nombre" class="vimar-modal-prompt-input" style="margin:4px 0 0 0;" placeholder="Nombre del producto">
+                </div>
+                <div>
+                    <label style="font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Categoría</label>
+                    <select id="mp-categoria" class="vimar-modal-prompt-input" style="margin:4px 0 0 0;cursor:pointer;"></select>
+                </div>
+                <div>
+                    <label id="mp-stock-label" style="font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Stock (lts)</label>
+                    <input type="number" id="mp-stock" class="vimar-modal-prompt-input" placeholder="0" min="0" step="any" style="margin:4px 0 0 0;">
+                </div>
+                <div id="mp-seccion-liquido">
+                    <label style="font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Precios (dejar en 0 si no aplica)</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px;">
+                        <div><label style="font-size:0.75em;color:#888;">250ml</label><input type="number" id="mp-p025" class="vimar-modal-prompt-input" placeholder="0" style="margin:2px 0 0 0;"></div>
+                        <div><label style="font-size:0.75em;color:#888;">500ml</label><input type="number" id="mp-p05" class="vimar-modal-prompt-input" placeholder="0" style="margin:2px 0 0 0;"></div>
+                        <div><label style="font-size:0.75em;color:#888;">1L</label><input type="number" id="mp-p1" class="vimar-modal-prompt-input" placeholder="0" style="margin:2px 0 0 0;"></div>
+                        <div><label style="font-size:0.75em;color:#888;">2L</label><input type="number" id="mp-p2" class="vimar-modal-prompt-input" placeholder="0" style="margin:2px 0 0 0;"></div>
+                        <div><label style="font-size:0.75em;color:#888;">3L</label><input type="number" id="mp-p3" class="vimar-modal-prompt-input" placeholder="0" style="margin:2px 0 0 0;"></div>
+                    </div>
+                </div>
+                <div id="mp-seccion-articulo" style="display:none">
+                    <label style="font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;">Precio Unitario</label>
+                    <input type="number" id="mp-pu" class="vimar-modal-prompt-input" placeholder="0" style="margin:4px 0 0 0;">
+                    <label style="font-size:0.8em;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-top:8px;display:block;">Promoción (cantidad → precio, ej: 10:90)</label>
+                    <input type="text" id="mp-promo" class="vimar-modal-prompt-input" placeholder="ej: 10:90  (opcional)" style="margin:4px 0 0 0;">
+                </div>
+            </div>
+            <div class="vimar-modal-confirmar-actions">
+                <button type="button" onclick="cerrarModalProducto()" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--ghost">Cancelar</button>
+                <button type="button" onclick="guardarProductoModal()" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="vimar-login-screen" style="
+        position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+        background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    ">
+        <div style="
+            background:rgba(255,255,255,0.05);border:1px solid rgba(0,242,255,0.3);border-radius:20px;
+            padding:40px 36px;width:100%;max-width:380px;box-shadow:0 0 60px rgba(0,242,255,0.15);
+            display:flex;flex-direction:column;align-items:center;gap:20px;
+        ">
+            <div style="font-weight:900;font-size:2em;letter-spacing:6px;color:#00f2ff;text-shadow:0 0 20px rgba(0,242,255,0.6);">VIMAR</div>
+            <div style="color:#888;font-size:0.85em;letter-spacing:2px;text-transform:uppercase;">Control de Ventas</div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+                <input type="text" id="login-usuario" placeholder="Usuario" autocomplete="off"
+                    class="vimar-modal-prompt-input" style="width:100%;box-sizing:border-box;"
+                    onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+                <input type="password" id="login-pass" placeholder="Contraseña"
+                    class="vimar-modal-prompt-input" style="width:100%;box-sizing:border-box;"
+                    onkeydown="if(event.key==='Enter')intentarLogin()">
+            </div>
+            <div id="login-error" style="color:#ff3131;font-size:0.85em;display:none;text-align:center;"></div>
+            <button onclick="intentarLogin()" class="vimar-modal-confirmar-btn vimar-modal-confirmar-btn--primary"
+                style="width:100%;padding:14px;font-size:1em;">
+                Iniciar Sesión
+            </button>
         </div>
     </div>
 
